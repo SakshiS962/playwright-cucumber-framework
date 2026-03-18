@@ -1,0 +1,19 @@
+{
+  "validUser": {
+    "username": "testUserS",
+    "password": "test123"
+  },
+  "invalidUser": {
+    "username": "wrong",
+    "password": "wrong"
+  },
+  "product":{
+    "name" : "Jenga"
+  },
+  "products":[ 
+    {"name" : "Jenga"},
+    {"name" : "Thinking, Fast and Slow"},
+    {"name" : "Yarine Floor Lamp"},
+    {"name" : "Xtend Smart Watch"}
+  ]
+}

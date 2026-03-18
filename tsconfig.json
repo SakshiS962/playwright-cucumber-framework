@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "resolveJsonModule": true,   // ✅ IMPORTANT
+    "esModuleInterop": true,     // ✅ IMPORTANT
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
