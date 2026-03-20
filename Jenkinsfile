@@ -6,7 +6,7 @@ pipeline {
     }
 
     parameters {
-        choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Browser')
+        choice(name: 'BROWSER', choices: ['chromium', 'firefox'], description: 'Browser')
         string(name: 'TAGS', defaultValue: '@checkout', description: 'Cucumber Tags')
     }
 
@@ -14,7 +14,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
-                sh 'npx playwright install'
+                sh 'npx playwright install chromium firefox'
             }
         }
 
