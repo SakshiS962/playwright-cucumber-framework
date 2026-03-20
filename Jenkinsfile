@@ -1,6 +1,10 @@
 pipeline {
     agent any
-
+    
+    tools {
+      nodejs 'node'
+    }
+    
     parameters {
         choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Browser')
         string(name: 'TAGS', defaultValue: '@smoke', description: 'Cucumber Tags')
