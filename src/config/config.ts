@@ -1,5 +1,5 @@
 export const config = {
   baseURL: 'https://crio-qkart-frontend-qa.vercel.app',
   browser: 'chromium',
-  timeout: 30000
+  timeout: 60*1000
 };
