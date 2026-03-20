@@ -1,11 +1,18 @@
 import { Before, After, Status } from '@cucumber/cucumber';
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { LoginPage } from '../pages/LoginPage';
 import { generateUser } from '../utils/userHelper';
 
+const browserType = process.env.BROWSER || 'chromium';
 Before(async function () {
   // ✅ Launch browser
-  this.browser = await chromium.launch({ headless: false });
+  if (browserType === 'chromium') {
+    this.browser = await chromium.launch({ headless: true });
+  } else if (browserType === 'firefox') {
+    this.browser = await firefox.launch({ headless: true });
+  } else if (browserType === 'webkit') {
+    this.browser = await webkit.launch({ headless: true });
+  }
 
   // ✅ Create context + page
   this.context = await this.browser.newContext();

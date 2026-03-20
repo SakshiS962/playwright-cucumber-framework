@@ -62,3 +62,44 @@ How do you improve test execution time?
 How do you run specific test sets?
 
 👉 “Using Cucumber tags like @smoke and @regression for selective execution.”
+//
+✔ Playwright + TS framework
+✔ Cucumber BDD
+✔ POM design
+✔ Dynamic data
+✔ Hooks
+✔ Allure reporting
+✔ Retry + Parallel
+✔ GitHub + CI/CD
+✔ Jenkins (almost)
+
+👉 This already puts you at:
+
+💼 2–4 years SDET level (strong)
+With next steps:
+
+Cross-browser
+
+API + UI
+
+Docker
+
+Jenkins mastery
+
+👉 You can confidently target:
+
+💼 4–6 years roles (easily)
+
+and stretch to 6–8 with prep
+//jenkins setup-
+java -version 
+brew install jenkins-lts
+brew services start jenkins-lts
+cat ~/.jenkins/secrets/initialAdminPassword
+
+How do you run tests dynamically in Jenkins?
+“I parameterized Jenkins jobs to run tests on different browsers and tags using environment variables.”
+
+How do you integrate reports in Jenkins?
+“I configured Allure Jenkins Plugin and published test results using post-build actions.”
+
