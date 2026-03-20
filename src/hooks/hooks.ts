@@ -2,6 +2,7 @@ import { Before, After, Status } from '@cucumber/cucumber';
 import { chromium, firefox, webkit } from 'playwright';
 import { LoginPage } from '../pages/LoginPage';
 import { generateUser } from '../utils/userHelper';
+import { getLoginToken } from '../utils/apiHelper';
 
 const browserType = process.env.BROWSER || 'chromium';
 Before({ timeout: 60 * 1000 }, async function () {
@@ -14,8 +15,18 @@ Before({ timeout: 60 * 1000 }, async function () {
     this.browser = await webkit.launch({ headless: true, slowMo: 50 });
   }
 
+
+  this.context = await this.browser.newContext();  
+   // ✅ Get token via API
+   const token = await getLoginToken('testUser', 'testPassword');
+
+   // ✅ Inject token into local storage
+   await this.context.addInitScript((token: string) => {
+     localStorage.setItem('token', token);
+   }, token);
+ 
   // ✅ Create context + page
-  this.context = await this.browser.newContext();
+ 
   this.page = await this.context.newPage();
 
   // ✅ Create dynamic user

@@ -62,16 +62,16 @@ How do you improve test execution time?
 How do you run specific test sets?
 
 👉 “Using Cucumber tags like @smoke and @regression for selective execution.”
-//
-✔ Playwright + TS framework
+//✔ Playwright + TypeScript framework
 ✔ Cucumber BDD
-✔ POM design
-✔ Dynamic data
-✔ Hooks
+✔ Page Object Model
+✔ Data-driven testing (JSON)
+✔ Hooks + reusable login
+✔ Retry + Parallel execution
 ✔ Allure reporting
-✔ Retry + Parallel
-✔ GitHub + CI/CD
-✔ Jenkins (almost)
+✔ GitHub integration (GitHub)
+✔ CI pipeline using Jenkins
+✔ Parameterized execution (browser + tags)
 
 👉 This already puts you at:
 

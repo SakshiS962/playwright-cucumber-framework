@@ -9,6 +9,10 @@ Given('user is on login page', async function () {
   loginPage = new LoginPage(this.page);
 });
 
+Given('user is already logged in', async function () {
+  // nothing needed, handled in hook
+});
+
 When('user enters valid credentials', async function () {
   loginPage = new LoginPage(this.page);
   await loginPage.login(
