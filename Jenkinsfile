@@ -2,12 +2,12 @@ pipeline {
     agent any
     
     tools {
-      nodejs 'nodejs'
+      nodejs 'Node JS'
     }
 
     parameters {
         choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'], description: 'Browser')
-        string(name: 'TAGS', defaultValue: '@smoke', description: 'Cucumber Tags')
+        string(name: 'TAGS', defaultValue: '@checkout', description: 'Cucumber Tags')
     }
 
     stages {
