@@ -1,8 +1,9 @@
 import { Before, After, Status } from '@cucumber/cucumber';
 import { chromium, firefox, webkit } from 'playwright';
-import { LoginPage } from '../pages/LoginPage';
-import { generateUser } from '../utils/userHelper';
+// import { LoginPage } from '../pages/LoginPage';
+// import { generateUser } from '../utils/userHelper';
 import { getLoginToken } from '../utils/apiHelper';
+import fs from 'fs';
 
 const browserType = process.env.BROWSER || 'chromium';
 Before({ timeout: 60 * 1000 }, async function () {
@@ -15,8 +16,42 @@ Before({ timeout: 60 * 1000 }, async function () {
     this.browser = await webkit.launch({ headless: true, slowMo: 50 });
   }
 
+ // ✅ Check if session already exists
+ if (fs.existsSync('auth.json')) {
+  console.log('✅ Using existing session');
 
-  this.context = await this.browser.newContext();  
+  this.context = await this.browser.newContext({
+    storageState: 'auth.json'
+  });
+
+} else {
+  console.log('⚡ No session found, logging in via API');
+
+  this.context = await this.browser.newContext();
+
+  // 👉 Get token
+  const token = await getLoginToken('testUser', 'testPassword');
+
+  // 👉 Inject token
+  await this.context.addInitScript((token : string) => {
+    localStorage.setItem('token', token);
+  }, token);
+  this.page = await this.context.newPage();
+    await this.page.goto('https://crio-qkart-frontend-qa.vercel.app');
+
+    // ✅ Save session
+    await this.context.storageState({ path: 'auth.json' });
+
+    console.log('💾 Session saved');
+  }
+
+  if (!this.page) {
+    this.page = await this.context.newPage();
+  }
+  await this.page.goto('https://crio-qkart-frontend-qa.vercel.app');
+
+  
+  /** 
    // ✅ Get token via API
    const token = await getLoginToken('testUser', 'testPassword');
 
@@ -26,8 +61,8 @@ Before({ timeout: 60 * 1000 }, async function () {
    }, token);
  
   // ✅ Create context + page
- 
   this.page = await this.context.newPage();
+ 
 
   // ✅ Create dynamic user
   const user = generateUser();
@@ -42,6 +77,8 @@ Before({ timeout: 60 * 1000 }, async function () {
 
   // ✅ Ensure login success
   await this.page.getByRole('button', { name: 'Logout' }).waitFor();
+*/
+
 });
 
 
