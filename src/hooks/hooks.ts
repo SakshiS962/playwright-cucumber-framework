@@ -9,7 +9,7 @@ const browserType = process.env.BROWSER || 'chromium';
 Before({ timeout: 60 * 1000 }, async function () {
   // ✅ Launch browser
   if (browserType === 'chromium') {
-    this.browser = await chromium.launch({ headless: true , slowMo: 50});
+    this.browser = await chromium.launch({ headless: false , slowMo: 50});
   } else if (browserType === 'firefox') {
     this.browser = await firefox.launch({ headless: true , slowMo: 50});
   } else if (browserType === 'webkit') {
