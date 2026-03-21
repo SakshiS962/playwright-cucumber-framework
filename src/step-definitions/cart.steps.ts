@@ -43,11 +43,6 @@ When('user adds multiple products to cart', async function () {
 // ✅ CHECKOUT FLOW
 When('user navigates to checkout', { timeout: 30 * 1000 }, async function () {
   checkoutPage = new CheckoutPage(this.page);
-  await this.page.goto('https://crio-qkart-frontend-qa.vercel.app/checkout', {
-    waitUntil: 'networkidle'
-  });
-
-  await this.page.locator('#add-new-btn').waitFor();
   await this.page.locator("//button[normalize-space()='Checkout']").click();
 });
 
