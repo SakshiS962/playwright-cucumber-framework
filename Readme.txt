@@ -62,35 +62,7 @@ How do you improve test execution time?
 How do you run specific test sets?
 
 👉 “Using Cucumber tags like @smoke and @regression for selective execution.”
-//✔ Playwright + TypeScript framework
-✔ Cucumber BDD
-✔ Page Object Model
-✔ Data-driven testing (JSON)
-✔ Hooks + reusable login
-✔ Retry + Parallel execution
-✔ Allure reporting
-✔ GitHub integration (GitHub)
-✔ CI pipeline using Jenkins
-✔ Parameterized execution (browser + tags)
 
-👉 This already puts you at:
-
-💼 2–4 years SDET level (strong)
-With next steps:
-
-Cross-browser
-
-API + UI
-
-Docker
-
-Jenkins mastery
-
-👉 You can confidently target:
-
-💼 4–6 years roles (easily)
-
-and stretch to 6–8 with prep
 //jenkins setup-
 java -version 
 brew install jenkins-lts
@@ -103,3 +75,35 @@ How do you run tests dynamically in Jenkins?
 How do you integrate reports in Jenkins?
 “I configured Allure Jenkins Plugin and published test results using post-build actions.”
 
+currently - dynamic user UI login + storage session 
+but can use like below....
+How do you manage test data and authentication?
+“I use dynamic user generation for test isolation and API-based authentication for faster execution. Session reuse is applied selectively for regression optimization.”
+
+where i am -
+✔ Playwright + TypeScript framework
+✔ Cucumber (BDD)
+✔ Page Object Model
+✔ Dynamic user handling
+✔ Hooks (advanced usage)
+✔ API + UI integration (you implemented both approaches)
+✔ Session handling (storage + fallback logic)
+✔ Parallel execution
+✔ Retry mechanism
+✔ Allure reporting
+✔ CI pipeline on Jenkins
+✔ Code pushed to GitHub
+
+/// for 6-8yrs to keep learning 
+You can safely skip (for now):
+
+❌ Docker
+❌ Kubernetes
+❌ Distributed execution
+❌ Advanced DevOps
+
+How do you ensure consistency across environments?
+“I containerize the automation framework using Docker to ensure consistent execution across local and CI environments.”
+
+How do you design Page Objects?
+“I separate locators from actions and use dynamic locators for reusable components like product cards to improve maintainability and reduce duplication.”

@@ -2,6 +2,7 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { LoginPage } from '../pages/LoginPage';
 import testData from '../utils/testData.json';
 import { expect } from '@playwright/test';
+import logger from '../utils/logger';
 
 let loginPage: LoginPage;
 
@@ -9,8 +10,9 @@ Given('user is on login page', async function () {
   loginPage = new LoginPage(this.page);
 });
 
-Given('user is already logged in', async function () {
-  // nothing needed, handled in hook
+Given('user is logged in', async function () {
+  logger.info('Navigating to login page');
+  // already handled in hook
 });
 
 When('user enters valid credentials', async function () {

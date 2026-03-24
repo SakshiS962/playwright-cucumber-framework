@@ -1,0 +1,297 @@
+""mock interviews"" - 4-6yrs sdet
+
+Q - Explain your automation framework end-to-end.
+A- I have developed a Playwright with TypeScript and Cucumber-based automation framework.When we run npx cucumber-js, Cucumber executes feature files based on tags and configuration.
+In the Before hook, I launch the browser and create a new browser context. I implemented dynamic user generation and session handling using storage state to avoid repeated login and improve execution time.
+During execution, step definitions interact with Page Objects where locators and actions are separated for better maintainability. I also leverage Playwright’s auto-waiting and robust locator strategies to reduce flakiness.
+I have configured parallel execution and retry mechanisms to optimize execution time and handle flaky tests.
+In the After hook, I capture screenshots for failed scenarios and integrate with Allure for reporting.
+In CI, I have set up a Jenkins pipeline which pulls code from GitHub, installs dependencies, runs tests, and publishes Allure reports.
+
+Q - page.locator() vs page.GetByRole() when are they used?
+A - “Both are used to locate elements in Playwright.
+getByRole is a semantic locator based on accessibility roles, which makes it more stable and aligned with user interactions. It is recommended by Playwright and is ideal for elements like buttons, links, and textboxes.
+On the other hand, locator() is a generic locator that works with CSS and XPath selectors. I use it when I need to handle dynamic elements or perform complex DOM traversal where semantic locators are not sufficient.”
+
+Q - What is auto-waiting in Playwright
+A - Auto-waiting in Playwright is a built-in synchronization mechanism where Playwright automatically waits for elements to be in a ready and actionable state before performing any operation on them.
+Unlike Selenium, where we explicitly add waits like implicit or explicit waits, Playwright eliminates most of that need by handling synchronization internally.
+Whenever we perform an action like click(), fill(), or hover(), Playwright ensures that:
+The element is present in the DOM
+The element is visible
+The element is stable (not animating or moving)
+The element is enabled
+The element is receiving events (not covered by another element)
+Only after all these conditions are met, the action is executed.
+However, auto-waiting does not handle everything. It does not wait for:
+API responses
+Custom loader disappearance (unless tied to DOM state)
+Page-level transitions in some cases
+That’s why Playwright provides additional methods like:
+await page.waitForLoadState('networkidle');
+await expect(locator).toBeVisible();
+So overall, auto-waiting reduces flaky tests significantly and removes the need for most explicit waits, making tests more reliable and cleaner.
+“In my framework, I rely primarily on Playwright’s auto-waiting and only use explicit waits when validating async behaviors like API-driven UI updates.”
+
+Q - “When does auto-waiting fail in Playwright?”
+A - Auto-waiting in Playwright works well for element-level actions, but it can fail or be insufficient in scenarios where synchronization is not directly tied to element actionability.
+1. API/Data-dependent UI updates
+Auto-waiting does not wait for backend responses.
+ Example:
+After clicking a button, data loads via API but UI element is already visible.
+await page.click('#loadData');
+await page.locator('.data-row').click(); // ❌ might fail if data not loaded yet
+✔ Fix:
+await expect(page.locator('.data-row')).toBeVisible();
+2. Custom loaders / spinners
+
+If loader disappears but target element is already present in DOM, Playwright may act too early.
+Fix:
+await page.waitForSelector('.loader', { state: 'hidden' });
+3. Animations / transitions
+Playwright checks for stability, but complex animations or CSS transitions can still cause flaky interactions.
+Especially in modern React apps.
+✔ Fix:
+Wait for stable state
+Or assert final UI state
+4. Non-action assertions
+Auto-wait works with actions (click, fill) — not plain checks.
+👉 This will NOT auto-wait properly:
+const text = await page.locator('.msg').textContent(); // ❌ may capture early
+✔ Better:
+await expect(page.locator('.msg')).toHaveText('Success');
+5. Navigation without proper wait
+Sometimes clicking triggers navigation but not fully awaited.
+✔ Fix:
+await Promise.all([
+  page.waitForNavigation(),
+  page.click('#submit')
+]);
+So, whenever synchronization depends on data loading, business logic, or state changes rather than element readiness, we need to complement auto-waiting with explicit waits or assertions.
+“I avoid hard waits and instead use condition-based waits like expect() or waitForSelector() to make tests deterministic.”
+
+Q - What is the difference between locator() and page.$() in Playwright?
+A - locator() is dynamic, retryable, and auto-waiting, whereas page.$() is static and does not support auto-waiting, making it more prone to flaky tests.
+used Rare cases:
+
+When you need low-level element handling
+Or working with JSHandle / DOM evaluation
+
+But in modern frameworks → we avoid it.
+
+Q - What is the difference between fixture and hooks in Playwright with Cucumber?
+A - Hooks are lifecycle-based setup/teardown methods, while fixtures are structured, reusable, and dependency-injected test resources.Fixtures are:
+
+Reusable test context setup with dependency injection
+
+They:
+
+Provide pre-configured objects (page, browser, context)
+Are scoped (test-level / worker-level)
+Automatically manage setup & teardown
+
+👉 Example (Playwright Test):
+
+test('example', async ({ page }) => {
+  await page.goto('https://example.com');
+});
+
+Here page is a fixture, not manually created.
+“In my framework, I primarily use Cucumber hooks for setup and teardown like browser initialization and login. Since Playwright fixtures are native to Playwright Test runner, we don’t directly use fixtures in Cucumber, but we implement similar behavior using shared context.”
+
+Q - How do you handle test data in your framework?
+A - “In my framework, I manage test data using external JSON files to keep test logic and data separate, which improves maintainability and scalability.”
+1. Static Test Data 
+Store data in JSON files
+Use for:
+Valid/invalid inputs
+Multiple test scenarios
+2. How you use it (this is important)
+“I read this data in step definitions or helper classes and pass it to my test steps.”
+3. Data-driven testing
+“For multiple datasets, I combine JSON with Cucumber Scenario Outline or iterate over datasets to run the same test with different inputs.”
+ 4. Dynamic Test Data
+“For scenarios where unique data is required, like signup flows, I generate dynamic data using utility functions.”
+5. Environment-based data
+“I also manage environment-specific data (like URLs, credentials) using config files or environment variables.”
+“This approach helps me keep test logic clean, supports data-driven testing, and avoids hardcoding, making the framework more scalable.”
+“I separate static, dynamic, and environment data to ensure flexibility and avoid test flakiness.”
+--
+“In my framework, I handle test data using external JSON files to maintain separation between test logic and data, which improves readability and scalability.”
+“For static data like valid and invalid inputs, I store them in structured JSON files and consume them in step definitions or helper classes.”
+“For data-driven testing, I use multiple datasets from JSON along with Cucumber Scenario Outline or iteration to execute the same test with different inputs.”
+“For scenarios requiring unique data, such as user registration, I generate dynamic data at runtime using utility functions to avoid conflicts.”
+“Additionally, I manage environment-specific data like URLs and credentials using config files or environment variables.”
+“This approach helps me keep tests maintainable, reusable, and less flaky.”
+--
+
+Q - How do you handle authentication (login) in your framework to avoid repeating it in every test?
+A - “To avoid repeating login in every test, I handle authentication by reusing the login session using Playwright’s storage state.”
+“Initially, I perform login once and store the authenticated session, including cookies and local storage, into a storage state file.”
+“Then I reuse this storage state across tests, so the user is already logged in when the test starts.”
+“This reduces execution time and avoids redundant login steps, making tests faster and more stable.”
+“In Cucumber, I integrate this with hooks so that the session is loaded before scenarios instead of performing UI login repeatedly.”
+
+Q - How do you handle parallel execution in your framework?
+A - “In my framework, I handle parallel execution using Cucumber’s built-in --parallel option, where I define the number of workers to run scenarios concurrently.”
+
+“Each worker runs scenarios independently, which helps reduce overall execution time.”
+“To ensure stability in parallel execution, I make sure that each test runs in isolation by creating a new browser context for every scenario. This prevents data leakage between tests.”
+“I manage browser and page initialization inside Cucumber hooks, so each parallel worker gets its own independent session.”
+“I also ensure that test data is unique or dynamically generated to avoid conflicts when multiple tests run in parallel.”
+“Additionally, I avoid shared global variables and ensure thread-safe execution by keeping test state within scenario context.”
+This approach helps me achieve faster execution while maintaining test reliability and avoiding flaky behavior in parallel runs.”
+
+Q - What is Browser Context in Playwright, and why is it important?
+A - “A Browser Context in Playwright is an isolated environment within a browser instance that acts like a separate user session.”
+“Each browser context has its own cookies, local storage, and session storage, which ensures that tests do not interfere with each other.”
+“In my framework, I create a new browser context for each scenario using browser.newContext(), which ensures complete test isolation, especially during parallel execution.”
+“For example, I can simulate multiple users by creating multiple contexts in the same browser without needing to launch multiple browsers.”
+“This is important because it prevents data leakage between tests, improves reliability, and supports parallel execution efficiently.”
+“It also allows us to reuse authenticated sessions using storage state, avoiding repeated login steps.”
+“Browser context provides lightweight, isolated sessions that are essential for parallel and reliable test execution.”
+
+Q - What is the difference between browser, browserContext, and page in Playwright?
+A - “In Playwright, browser, browserContext, and page represent a hierarchy of objects used to control the browser.”
+1. Browser
+“Browser is the top-level object representing an instance of a browser like Chromium, Firefox, or WebKit.”
+It manages:
+Multiple contexts
+Overall browser lifecycle
+2. Browser Context
+“BrowserContext is an isolated environment within the browser, similar to an incognito session, with its own cookies, local storage, and session storage.”
+Key role:
+Test isolation
+Parallel execution
+3.Page
+“Page represents a single tab within a browser context where actual test actions are performed.”Used for:
+Navigation
+Interactions
+Assertions
+“So the hierarchy is: Browser → BrowserContext → Page.”
+“Browser manages contexts, contexts provide isolation, and pages are where actual test execution happens.”
+
+Q - How do you handle failures and debugging in your framework?
+A - “In my framework, I handle failures using multiple mechanisms to improve debugging and stability.”
+“I have implemented retries to identify flaky tests by re-running failed scenarios.”
+“I capture screenshots on failure to understand the UI state at the time of failure.”
+“I also use logs to trace execution steps and identify where exactly the failure occurred.”
+“Currently, I am enhancing my framework by integrating a structured logging mechanism to capture step-level and error-level logs for better debugging and reporting.”
+Datadog for monitoring and debugging.”?? 
+
+Q - How do you design your framework to be scalable and maintainable?
+A - 1. Page Object Model - “I use the Page Object Model to separate locators and actions from test logic, which improves readability and makes the framework easier to maintain.”
+2. Proper Folder Structure - “I organize the framework into separate layers like pages, step definitions, hooks, utilities, and test data, so each component has a clear responsibility.”
+3. Test Data Management - “I manage test data using external JSON files, which allows easy scaling for multiple test scenarios and avoids hardcoding.”
+4. Reusability
+“I create reusable utility functions and common methods to avoid duplication and keep the code DRY.”
+5. Hooks for Setup & Teardown
+“I use Cucumber hooks to manage browser setup, teardown, and common flows like login, ensuring consistency across tests.”
+6. Test Isolation & Parallel Execution
+“I ensure each test runs in isolation using separate browser contexts, which allows stable parallel execution.”
+7. Config Management
+“I use configuration files to manage environment-specific values like URLs, credentials, and execution settings.”
+8. Logging & Reporting
+“I integrate logging and reporting mechanisms to improve debugging and provide better visibility into test execution.”
+“Overall, this modular and scalable design helps in maintaining the framework easily, adding new tests quickly, and ensuring reliable execution.”“I focus on separation of concerns, reusability, and isolation to make the framework scalable and maintainable.”
+
+Q - How do you handle flaky tests in your framework?
+A - 1. Reties - “I use retries to identify flaky tests by re-running failed scenarios, but I don’t rely on them as a permanent solution.”
+2. Proper Synchronization - “I use condition-based waits like assertions and waitForSelector to handle dynamic data loading, API responses, and navigation where auto-waiting is not sufficient.”
+3. “I avoid hardcoded waits like waitForTimeout because they make tests slow and unreliable.”
+4. “I ensure test data is isolated and unique to avoid conflicts during parallel execution.”
+5.“I use stable locators like getByRole or data-testid instead of dynamic selectors to reduce flakiness.”
+6. Debugging Support-
+“I use screenshots and logs to analyze failures and identify the root cause.”
+
+Q - How do you handle API testing in your framework (if at all)?
+A - “Currently, I haven’t implemented API testing directly in my framework, as my focus has been on UI automation using Playwright and Cucumber.”
+
+“However, I am aware that Playwright provides built-in API testing capabilities, which can be used for scenarios like API-based login to avoid UI login and improve execution speed.”
+
+“I am also exploring integrating API validation into my framework to verify backend responses alongside UI, which would improve test coverage and reliability.”
+“My plan is to use Playwright’s request context to perform API calls and validate responses, and also reuse API results in UI tests where needed.”
+
+Q - How do you handle environment configuration in your framework?
+A - “In my framework, I manage environment configuration using a centralized config file where I define environment-specific values like URLs for dev, QA, and prod.”
+1. Environment-based config 
+“I maintain separate configurations for each environment, which allows easy switching without changing test code.”
+2. Dynamic environment selection (VERY IMPORTANT 🔥)
+
+“I use environment variables or command-line parameters to select the target environment at runtime.”
+3. Config structure (adds depth)
+
+“The config file stores values like base URL, credentials, timeouts, and other environment-specific settings.”
+4. Avoid hardcoding (important)
+
+“This approach avoids hardcoding values in test scripts and improves maintainability.”
+5. Security (nice bonus point 💯)
+
+“Sensitive data like credentials can be managed using environment variables instead of storing them directly in code.”“This setup makes the framework flexible, reusable across environments, and easy to maintain.”
+const env = process.env.ENV || 'qa';
+
+const config = {
+  qa: { baseURL: 'https://qa.example.com' },
+  dev: { baseURL: 'https://dev.example.com' },
+  prod: { baseURL: 'https://prod.example.com' }
+};
+
+export const baseURL = config[env].baseURL;
+
+Q - What kind of reports are you generating in your framework?
+A - “In my framework, I use Allure Report for generating detailed and interactive test reports.
+”1. What Allure Provides
+
+“It provides a clear visualization of test execution, including passed, failed, and skipped test cases.”
+2. Rich Reporting Features (IMPORTANT 🔥)
+
+“I capture additional details like screenshots on failure, step-level execution, and error messages, which help in debugging.”
+ 3. Attachments (this impresses interviewer)
+
+“I attach screenshots and logs to the report so that failures can be analyzed without rerunning the tests.”
+4. Cucumber Integration
+
+“Since I am using Cucumber, Allure integrates well with it and generates reports based on feature files and scenarios.”
+5. Benefits (important)
+
+“It helps stakeholders easily understand test results and helps the team quickly identify and debug failures.”
+“Overall, Allure improves visibility, debugging efficiency, and reporting quality in my framework.”
+“I can further enhance reports by adding custom steps and environment details for better traceability.”
+
+
+Q - If you had to improve your current framework, what changes would you make?
+A - 1. Logging
+2. API Integration
+3. Better Error Handling
+
+“I would enhance error handling by capturing more detailed failure information like network logs and attaching them to reports.”
+4. Test Data Management Improvement
+
+“I would improve test data handling by making it more dynamic and environment-driven to support larger-scale testing.”
+5. CI/CD Optimization (BIG IMPACT POINT 💯)
+
+“I would also optimize CI/CD execution by improving parallel execution strategy and integrating better reporting for faster feedback.”
+
+--- 2yrs -4 yrs ------
+Q - What is the difference between before, beforeAll, and beforeEach hooks?
+A - “Hooks are used to execute setup or teardown logic at different stages of test execution.”
+1. Before / beforeEach
+
+“Before (or beforeEach) runs before every scenario.”
+
+👉 Use case:
+
+Launch browser
+Create context
+Initialize page
+
+✔ Runs for each test/scenario
+2. BeforeAll
+
+“BeforeAll runs once before all scenarios in the test suite, not per feature.”
+✅ It runs once globally
+Launch browser once
+Global setup
+
+Q - What is a flaky test? Why does it happen?
+A - 

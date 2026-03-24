@@ -1,8 +1,9 @@
 import { Before, After, Status } from '@cucumber/cucumber';
 import { chromium, firefox, webkit } from 'playwright';
-// import { LoginPage } from '../pages/LoginPage';
-// import { generateUser } from '../utils/userHelper';
+import { LoginPage } from '../pages/LoginPage';
+import { generateUser } from '../utils/userHelper';
 import { getLoginToken } from '../utils/apiHelper';
+import logger from '../utils/logger';
 import fs from 'fs';
 
 const browserType = process.env.BROWSER || 'chromium';
@@ -15,29 +16,33 @@ Before({ timeout: 60 * 1000 }, async function () {
   } else if (browserType === 'webkit') {
     this.browser = await webkit.launch({ headless: true, slowMo: 50 });
   }
+  if (fs.existsSync('auth.json')) {
+    console.log('✅ Using existing session');
 
- // ✅ Check if session already exists
- if (fs.existsSync('auth.json')) {
-  console.log('✅ Using existing session');
+    this.context = await this.browser.newContext({
+      storageState: 'auth.json'
+    });
 
-  this.context = await this.browser.newContext({
-    storageState: 'auth.json'
-  });
+  } else {
+    console.log('⚡ No session found, creating new user');
 
-} else {
-  console.log('⚡ No session found, logging in via API');
+    this.context = await this.browser.newContext();
+    this.page = await this.context.newPage();
 
-  this.context = await this.browser.newContext();
-
-  // 👉 Get token
-  const token = await getLoginToken('testUser', 'testPassword');
-
-  // 👉 Inject token
-  await this.context.addInitScript((token : string) => {
-    localStorage.setItem('token', token);
-  }, token);
-  this.page = await this.context.newPage();
     await this.page.goto('https://crio-qkart-frontend-qa.vercel.app');
+
+    // ✅ Generate dynamic user
+    const user = generateUser();
+    this.user=user;
+
+    const loginPage = new LoginPage(this.page);
+
+    // ✅ Register + login
+    await loginPage.register(user.username, user.password);
+    await loginPage.login(user.username, user.password);
+
+    // ✅ Verify login
+    await this.page.getByRole('button', { name: 'Logout' }).waitFor();
 
     // ✅ Save session
     await this.context.storageState({ path: 'auth.json' });
@@ -48,8 +53,9 @@ Before({ timeout: 60 * 1000 }, async function () {
   if (!this.page) {
     this.page = await this.context.newPage();
   }
-  await this.page.goto('https://crio-qkart-frontend-qa.vercel.app');
 
+  await this.page.goto('https://crio-qkart-frontend-qa.vercel.app');
+});
   
   /** 
    // ✅ Get token via API
@@ -79,13 +85,14 @@ Before({ timeout: 60 * 1000 }, async function () {
   await this.page.getByRole('button', { name: 'Logout' }).waitFor();
 */
 
-});
+
 
 
 
 
 After(async function (scenario) {
   if (scenario.result?.status === 'FAILED') {
+    logger.error(`Scenario failed: ${scenario.pickle.name}`);
     const screenshot = await this.page.screenshot();
     console.log('Screenshot captured for failed test');
   }

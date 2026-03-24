@@ -12,8 +12,8 @@ let user: any;
 
 const address = "Test Address 1234567890";
 
-Given('user is already logged in', async function () {
-  // nothing needed, handled in hook
+Given('user is logged in', async function () {
+  // already handled in hook
 });
 // ✅ SEARCH
 When('user searches for a product', async function () {
